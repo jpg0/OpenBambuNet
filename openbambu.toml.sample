@@ -1,0 +1,31 @@
+# Bambu Farm Configuration File
+# Place this file as 'bambufarm.toml' in the directory where OrcaSlicer runs
+
+# Define your printers here
+[[printers]]
+dev_id = "01S09C360100123"    # Your printer's serial number/device ID
+name = "My X1 Carbon"          # Friendly name for the printer
+model = "x1c"                  # Printer model: "x1c", "x1", or "p1p"
+host = "192.168.1.100"         # IP address of your printer
+password = "12345678"          # Access code from printer screen (Settings > LAN)
+mqtt_port = 8883               # MQTT port (default: 8883 with SSL, 1883 without SSL)
+ftp_port = 990                 # FTP port (default: 990 with SSL, 21 without SSL)
+ssl = true                     # Use SSL/TLS (recommended: true)
+
+# You can add multiple printers:
+# [[printers]]
+# dev_id = "01S09C360100456"
+# name = "My P1P"
+# model = "p1p"
+# host = "192.168.1.101"
+# password = "87654321"
+# mqtt_port = 8883
+# ftp_port = 990
+# ssl = true
+
+# Notes:
+# - dev_id: Found on printer screen or in Bambu Studio/OrcaSlicer device list
+# - model: Must be one of: "x1c" (X1 Carbon), "x1" (X1), or "p1p" (P1P)
+# - password: LAN access code shown on printer (Settings > LAN > Access Code)
+# - If mqtt_port/ftp_port are omitted, defaults are used based on ssl setting
+# - ssl=true uses secure ports (8883/990), ssl=false uses standard ports (1883/21)

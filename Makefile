@@ -1,8 +1,6 @@
-
 all:
-	cd bambu-farm-client && make shared
-	cd bambu-farm-server && cargo build
+	cd libbambu-networking-api && make build
 
-run: all
-	cd bambu-farm-server && RUST_LOG=warn cargo run
-
+clean:
+	cd libbambu-networking-api && cargo clean
+	cd core && cargo clean

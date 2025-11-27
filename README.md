@@ -1,31 +1,74 @@
-# Bambu Farm 🧑🏽‍🌾
+# OpenBambuNet �
 
-Run your own cloud service for Bambu Labs printers and unlock the full potential of LAN mode!
+**OpenBambuNet** is a free and open-source (FOSS) alternative to the proprietary `libbambu_networking.so` library used by Bambu Studio. It allows for direct LAN-mode communication with Bambu Lab printers without relying on Bambu Lab's cloud services or closed-source plugins.
 
-As of writing (September 2023) Bambu Labs has not released the source code for the `libbambu_networking.so` shared library that they link with to provide the full functionality of Bambu Studio, forked from the AGPLv3 Prusa Slicer. Until they choose to release the code on their own or somebody with deep pockets decides to sue them, you can use this project to provide your own LAN-mode "cloud" printing service. Or at least, you could, *if* you help me figure out the finishing touches like auth, bugfixes, replacing `.unwrap()`s with error handling, and general quality of life features. 👀
+> [!NOTE]
+> This project is a fork of the original source, aiming to provide a community-driven, drop-in replacement library.
 
-## How does it work?
+## Overview
 
-At startup, Bambu Studio looks for a plugin called `libbambu_networking.so`, `dlopen`s it and calls into it for networking functionality. By default, it will use the proprietary version installed from Bambu Labs' servers. I don't like that, so I wrote my own. It's a drop-in replacement, and there's a Makefile in this project that will symlink the build artifacts into `$HOME/.config/BambuStudio/plugins/*` to install the FOSS plugin. Bambu Studio will then use this version instead of its own.
+Bambu Studio normally loads a proprietary plugin (`libbambu_networking.so`) to handle network communication with printers. OpenBambuNet provides a compatible shared library that Bambu Studio can load instead.
 
-Unfortunately, the C++ ecosystem is full of footguns, and dynamic linking is a sham, so you can't use OpenSSL in `libbambu_networking.so` or it'll segfault. This presents a lot of issues considering Bambu Labs' use of TLS for MQTT and FTP, so I extracted all of the command and control logic into a server process and use gRPC to communicate between `libbambu_networking.so` and the server. That gRPC link will eventually be able to use TLS with `rustls` and `ring`, dodging the OpenSSL difficulties. A side-effect of this separation between client and server is that this makes the architecture scale to arbitrarily large print farms and should allow communication between clients and printers on different networks, as well as allowing the implementation of fine-grained access controls.
+By using OpenBambuNet, you gain:
+- **Transparency**: Know exactly what data is being sent to your printer.
+- **Control**: Operate entirely in LAN mode with no external dependencies.
+- **Freedom**: A truly open stack for your 3D printing workflow.
 
-## What's the current status?
+## How it Works
 
-Currently you can control and monitor the printer's vitals, jog and home the axes and start print jobs. You can't view the camera feed yet. The implementation is very bare-bones and it's not ready for general use.
+The library is written in Rust and exposes a C++ ABI compatible with the interface Bambu Studio expects. It utilizes `paho-mqtt` for command/control and FTP for file transfers, communicating directly with the printer's local interfaces.
 
-## What do I need to build/run it?
+## Installation
 
-Off the top of my head, you'll need Rust/Cargo, OpenSSL (development packages), GNU Make, a C/C++ build system, a protocol buffers compiler (protoc), cURL, and a little bit of determination to fix any issues that come up. Some of my projects are very highly polished, but this is not one of them.
+To use OpenBambuNet, you need to build the shared library and replace the proprietary plugin in your Bambu Studio installation.
 
-## Get involved!
+### Prerequisites
+- Rust (stable)
+- C++ compiler (GCC/Clang)
+- CMake
+- OpenSSL development headers
 
-If a feature you need is missing open an issue to run it by me, but it's very likely I want that feature and will accept a PR for it. A lot of the cruft in this project exists for a reason, so open an issue before you try any major refactors, or try to switch around dependencies and stuff. There's a good chance I've already tried what you have in mind and lost a few hours of my life to it.
+### Building
 
-## Any caveats?
+```bash
+cargo build --release
+```
 
-Be aware that once you install *any* networking plugin, Bambu Studio will assume that you've installed *theirs* and will "upgrade" it whenever you install a new version of Bambu Studio by replacing it with their proprietary version without your consent. I plan on opening a bug against them for that.
+### Installing
 
-## Licensing information
+You can symlink the built library to your Bambu Studio plugins directory.
 
-This project is licensed under the AGPLv3 because it contains code from Bambu Studio.
+**macOS Example:**
+```bash
+ln -sf $(pwd)/target/release/libbambu_networking.dylib ~/Library/Application\ Support/BambuStudio/plugins/libbambu_networking.dylib
+```
+
+**Linux Example:**
+```bash
+ln -sf $(pwd)/target/release/libbambu_networking.so ~/.config/BambuStudio/plugins/libbambu_networking.so
+```
+
+> [!WARNING]
+> Bambu Studio may attempt to overwrite this plugin during updates. You may need to reinstall the symlink after updating Bambu Studio.
+
+## Development Status
+
+The project is currently in active development.
+- **Implemented**: Basic printer status monitoring, axis control, print job start.
+- **Missing**: Camera feed, advanced authentication handling, robust error handling.
+
+## Testing
+
+This repository includes a `mock-printer` to simulate a Bambu Lab printer for integration testing.
+
+```bash
+cd mock-printer
+npm install
+npm start
+```
+
+See `mock-printer/README.md` for more details.
+
+## License
+
+This project is licensed under the **AGPLv3**.

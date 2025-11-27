@@ -1,0 +1,5 @@
+target/
+closed_lib/
+**/*.log
+.DS_Store
+plans/
